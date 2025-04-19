@@ -10,34 +10,33 @@ import {
 } from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import IndeterminateCheckbox from "./IndeterminateCheckbox";
 
 type User = {
   id: number;
-  name: string;
   username: string;
+  gender: string;
   email: string;
-  website: string;
-  address: {
-    country?: string;
-    city?: string;
-    street?: string;
-    zipcode?: string;
-    geo?: {
-      lat: string;
-      lng: string;
+  role?: string; // not in the API, but if you plan to inject it
+  company: {
+    name: string;
+    address: {
+      country: string;
     };
   };
 };
 
 const fetchUsers = async (): Promise<User[]> => {
-  const { data } = await axios.get(
-    "https://jsonplaceholder.typicode.com/users"
-  );
-  return data;
+  const { data } = await axios.get("https://dummyjson.com/users");
+  return data.users;
 };
 
 export const UsersTable = () => {
-  const { data = [], isLoading } = useQuery<User[]>({
+  const {
+    data = [],
+    isLoading,
+    error,
+  } = useQuery<User[]>({
     queryKey: ["users"],
     queryFn: fetchUsers,
   });
@@ -48,24 +47,26 @@ export const UsersTable = () => {
     {
       id: "select",
       header: ({ table }) => (
-        <input
-          type="checkbox"
-          checked={table.getIsAllRowsSelected()}
-          onChange={table.getToggleAllRowsSelectedHandler()}
+        <IndeterminateCheckbox
+          {...{
+            checked: table.getIsAllRowsSelected(),
+            indeterminate: table.getIsSomeRowsSelected(),
+            onChange: table.getToggleAllRowsSelectedHandler(),
+          }}
         />
       ),
       cell: ({ row }) => (
-        <input
-          type="checkbox"
-          checked={row.getIsSelected()}
-          disabled={!row.getCanSelect()}
-          onChange={row.getToggleSelectedHandler()}
-        />
+        <div className="px-1">
+          <IndeterminateCheckbox
+            {...{
+              checked: row.getIsSelected(),
+              disabled: !row.getCanSelect(),
+              indeterminate: row.getIsSomeSelected(),
+              onChange: row.getToggleSelectedHandler(),
+            }}
+          />
+        </div>
       ),
-    },
-    {
-      header: "Name",
-      accessorKey: "name",
     },
     {
       header: "Username",
@@ -76,12 +77,22 @@ export const UsersTable = () => {
       accessorKey: "email",
     },
     {
-      header: "Website",
-      accessorKey: "website",
+      header: "Gender",
+      accessorKey: "gender",
+    },
+    {
+      header: "Role",
+      accessorKey: "role",
+    },
+    {
+      header: "Company",
+      accessorFn: (row) => row.company.name ?? "N/A",
+      id: "name",
     },
     {
       header: "Country",
-      accessorFn: (row) => row.address?.city || "Unknown",
+      accessorFn: (row) => row.company.address.country ?? "N/A",
+      id: "country",
     },
   ];
 
@@ -98,19 +109,21 @@ export const UsersTable = () => {
     getFilteredRowModel: getFilteredRowModel(),
   });
 
+  const selectedUsers = table
+    .getSelectedRowModel()
+    .rows.map((row) => row.original);
+
   if (isLoading) return <p>Loading...</p>;
+  if (error instanceof Error) return <p>Error: {error.message}</p>;
 
   return (
     <>
-      <table style={{ borderCollapse: "collapse", width: "100%" }}>
+      <table className="table-auto w-full border-collapse">
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
+            <tr key={headerGroup.id} className="bg-gray-200">
               {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  style={{ border: "1px solid #ccc", padding: "8px" }}
-                >
+                <th key={header.id} className="px-2 py-2 text-left">
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -124,12 +137,9 @@ export const UsersTable = () => {
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
+            <tr key={row.id} className="odd:bg-white even:bg-gray-100">
               {row.getVisibleCells().map((cell) => (
-                <td
-                  key={cell.id}
-                  style={{ border: "1px solid #ccc", padding: "8px" }}
-                >
+                <td key={cell.id} className="px-2 py-2 text-left">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
@@ -138,16 +148,30 @@ export const UsersTable = () => {
         </tbody>
       </table>
 
-      <pre
-        style={{ marginTop: "20px", background: "#f0f0f0", padding: "10px" }}
-      >
-        Selected Row IDs:{" "}
-        {JSON.stringify(
-          table.getSelectedRowModel().rows.map((row) => row.original.id),
-          null,
-          2
-        )}
-      </pre>
+      {selectedUsers.length > 0 && (
+        <pre className="mt-5 bg-gray-100 p-2.5">
+          <div>
+            <h2>Selected User Details</h2>
+            {selectedUsers.map((user) => (
+              <div key={user.id} className="border border-gray-300 p-4 mb-4">
+                <p>
+                  <strong>Username:</strong> {user.username}
+                </p>
+                <p>
+                  <strong>Email:</strong> {user.email}
+                </p>
+                <p>
+                  <strong>Website:</strong> {user.email}
+                </p>
+                <p>
+                  <strong>Country:</strong>{" "}
+                  {user.company.address.country ?? "N/A"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </pre>
+      )}
     </>
   );
 };
