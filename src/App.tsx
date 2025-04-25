@@ -7,7 +7,7 @@ function App() {
     <div>
       <AdobePdfViewer
         url="https://acrobatservices.adobe.com/view-sdk-demo/PDFs/Bodea%20Brochure.pdf"
-        clientId="b6266095e129481fbce99fe8e686c64c"
+        clientId="" // remove while pushing to github
         fileName="sample.pdf"
       />
       <UsersTable />
