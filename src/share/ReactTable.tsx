@@ -1,4 +1,3 @@
-// ReactTable.tsx
 import {
   useReactTable,
   getCoreRowModel,

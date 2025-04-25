@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import axios from "axios";
-import IndeterminateCheckbox from "./IndeterminateCheckbox";
-import ReactTable from "./ReactTable";
+import IndeterminateCheckbox from "../../share/IndeterminateCheckbox";
+import ReactTable from "../../share/ReactTable";
 
 type User = {
   id: number;
