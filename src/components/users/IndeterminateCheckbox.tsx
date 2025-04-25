@@ -22,7 +22,7 @@ const IndeterminateCheckbox = ({
     <input
       type="checkbox"
       ref={ref}
-      className={`cursor-pointer ${className}`}
+      className={`w-4 h-4 rounded-none ${className}`}
       {...rest}
     />
   );

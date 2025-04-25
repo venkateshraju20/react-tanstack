@@ -1,23 +1,16 @@
 import { useState } from "react";
-import {
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-  getFilteredRowModel,
-  flexRender,
-  ColumnDef,
-  RowSelectionState,
-} from "@tanstack/react-table";
 import { useQuery } from "@tanstack/react-query";
+import { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import axios from "axios";
 import IndeterminateCheckbox from "./IndeterminateCheckbox";
+import ReactTable from "./ReactTable";
 
 type User = {
   id: number;
   username: string;
   gender: string;
   email: string;
-  role?: string; // not in the API, but if you plan to inject it
+  role?: string;
   company: {
     name: string;
     address: {
@@ -42,6 +35,7 @@ export const UsersTable = () => {
   });
 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [selectedRows, setSelectedRows] = useState<User[]>([]);
 
   const columns: ColumnDef<User>[] = [
     {
@@ -96,69 +90,30 @@ export const UsersTable = () => {
     },
   ];
 
-  const table = useReactTable({
-    data,
-    columns,
-    state: {
-      rowSelection,
-    },
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-  });
-
-  const selectedUsers = table
-    .getSelectedRowModel()
-    .rows.map((row) => row.original);
-
   if (isLoading) return <p>Loading...</p>;
   if (error instanceof Error) return <p>Error: {error.message}</p>;
 
   return (
     <>
-      <table className="table-auto w-full border-collapse">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id} className="bg-gray-200">
-              {headerGroup.headers.map((header) => (
-                <th key={header.id} className="px-2 py-2 text-left">
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="odd:bg-white even:bg-gray-100">
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-2 py-2 text-left">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <ReactTable
+        data={data}
+        columns={columns}
+        onRowSelectionChange={setSelectedRows}
+        rowSelection={rowSelection}
+        setRowSelection={setRowSelection}
+      />
 
-      {selectedUsers.length > 0 && (
+      {selectedRows.length > 0 && (
         <pre className="mt-5 bg-gray-100 p-2.5">
           <div>
             <h2>Selected User Details</h2>
-            {selectedUsers.map((user) => (
+            {selectedRows.map((user) => (
               <div key={user.id} className="border border-gray-300 p-4 mb-4">
                 <p>
                   <strong>Username:</strong> {user.username}
                 </p>
                 <p>
-                  <strong>Email:</strong> {user.email}
+                  <strong>Role:</strong> {user.role}
                 </p>
                 <p>
                   <strong>Website:</strong> {user.email}
